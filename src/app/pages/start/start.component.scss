@@ -1,0 +1,36 @@
+$pageMargin: .75rem;
+
+:host {
+    width: 100vw;
+    height: 100vh;
+
+    background-color: #6594ec;
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: $pageMargin;
+
+    position: relative;
+}
+
+h1 {
+    text-align: center;
+}
+
+#start-actions {
+    position: absolute;
+    bottom: $pageMargin;
+    left: $pageMargin;
+    right: $pageMargin;
+
+    p {
+        text-align: center;
+    }
+
+    ion-button {
+        width: 100%;
+    }
+}
