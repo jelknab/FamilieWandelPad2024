@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
 import { LeafletModule } from '@bluehalo/ngx-leaflet';
-import { latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions } from 'leaflet';
+import {latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions, icon, marker, LatLng} from 'leaflet';
 import { LineString, Polygon, Position as GeoPosition } from 'geojson';
 import { GeoService } from 'src/app/services/geo.service';
 import { getSection, routePoints, sections } from "../../helpers/routeHelpers"
 import { Position } from '@capacitor/geolocation';
-import { fromEvent, startWith } from 'rxjs';
+import { fromEvent, startWith, combineLatest } from 'rxjs';
 import { style } from '@angular/animations';
 import { NavigationService } from 'src/app/services/navigation.service';
+import 'leaflet-rotatedmarker';
 
 @Component({
   selector: 'app-map',
@@ -38,10 +39,11 @@ export class MapComponent {
     19: 1.25
   }
 
-  constructor(
-    private geoService: GeoService,
-    private navigationService: NavigationService
-  ) {
+  geoService = inject(GeoService);
+  navigationService = inject(NavigationService);
+
+  constructor() {
+    reactToLandmarkVisits()
   }
 
   onMapReady(map: Map) {
@@ -53,8 +55,43 @@ export class MapComponent {
       map.panTo(latLng({lat: p.coords.latitude, lng: p.coords.longitude}), { animate: true, duration: .5 });
     });
 
+    const navigationArrowIcon = icon({
+      iconUrl: 'assets/icon/navigationArrow.svg',
+      iconSize: [50, 50], // Adjust the size as necessary
+      iconAnchor: [25, 25]
+    });
+
+    const navigationArrowMarker = marker([0, 0], { icon: navigationArrowIcon })
+      .addTo(map);
+
+    combineLatest([this.navigationService.position$, this.navigationService.visitedWaypoints$])
+      .subscribe(([position, visitedWaypoints]) => {
+        navigationArrowMarker.setLatLng({ lat: position.coords.latitude, lng: position.coords.longitude });
+
+        if (visitedWaypoints.target) {
+          const angle = this.calculateHeading(
+            latLng({lat: position.coords.latitude, lng: position.coords.longitude}),
+            latLng({lat: visitedWaypoints.target.latitude, lng: visitedWaypoints.target.longitude})
+            );
+
+          navigationArrowMarker.setRotationAngle(-angle + 90);
+        }
+      });
+
     const pathLayer = this.routeToLineString().addTo(map);
-      
+    const walkedRouteLayer = geoJSON<Position, LineString>({
+      type: 'LineString',
+      coordinates: []
+    } as LineString).addTo(map);
+
+    this.navigationService.walkedRoute$.subscribe(waypoints => {
+      const coordinates = waypoints.map(wp => [wp.lng, wp.lat]);
+      walkedRouteLayer.clearLayers();
+      walkedRouteLayer.addData({
+        type: 'LineString',
+        coordinates: coordinates
+      } as LineString);
+    });
 
     fromEvent(map, 'zoomend')
       .pipe(
@@ -73,6 +110,10 @@ export class MapComponent {
     }, 0);
   }
 
+  private reactToLandmarkVisits() {
+    this.navigationService.
+  }
+
   private routeToLineString(): GeoJSON<Position, LineString> {
     return geoJSON<Position, LineString>(
       {
@@ -86,5 +127,18 @@ export class MapComponent {
       }
     );
   }
+
+  private calculateHeading(current: LatLng, next: LatLng): number {
+    const dy = next.lat - current.lat;
+    const dx = next.lng - current.lng;
+
+    // Calculate the angle in radians, then convert to degrees
+    const angleInRadians = Math.atan2(dy, dx);
+    const angleInDegrees = (angleInRadians * 180) / Math.PI;
+
+    // Normalize the angle to 0-360 degrees
+    return (angleInDegrees + 360) % 360;
+  }
+
 
 }
