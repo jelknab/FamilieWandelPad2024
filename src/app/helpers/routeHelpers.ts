@@ -1,8 +1,20 @@
 import { latLng, LatLng } from 'leaflet';
 import { geoData } from 'src/assets/geodata';
+import { translations as rawTranslations } from 'src/assets/poi-translations';
 
 export type Waypoint = typeof routePoints[number];
 export type Direction = 'forward' | 'backward';
+
+export type Translation = {routePointId: number; language: string; content: string;};
+
+export const translations = rawTranslations
+  .map(([id, routePointId, language, content]) => {
+    return {
+      routePointId,
+      language,
+      content,
+    } as Translation;
+  });
 
 export const routePoints = geoData
   .filter(rp => rp.routeId === 1)
@@ -10,7 +22,8 @@ export const routePoints = geoData
   .map(point => {
     return {
       ...point,
-      latlng: latLng({lat: point.latitude, lng: point.longitude})
+      latlng: latLng({lat: point.latitude, lng: point.longitude}),
+      translation: translations.find((t) => t.
     }
   });
 
@@ -75,7 +88,7 @@ export function getSection(position: LatLng) {
 
 export function getDistanceInSection(waypoint: Waypoint, direction: Direction) {
     const section = getSection(waypoint.latlng);
-    
+
     if (section === null) {
         return {distance: 0, lastWp: waypoint};
     }
