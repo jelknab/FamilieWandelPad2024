@@ -1,22 +1,10 @@
 import {Injectable} from '@angular/core';
 import {Position} from '@capacitor/geolocation';
-import {
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  map,
-  Observable,
-  scan, share,
-  shareReplay,
-  Subject,
-  switchMap,
-  take
-} from 'rxjs';
+import {combineLatest, distinctUntilChanged, filter, map, Observable, scan, share, shareReplay, Subject, switchMap, take} from 'rxjs';
 import {findOptimalStartingPoint, getRouteEnumerable, routePoints, Waypoint} from '../helpers/routeHelpers';
 import {latLng, LatLng} from 'leaflet';
-import {calendarClearOutline} from "ionicons/icons";
 
-const WAYPOINT_ACTIVATION_DISTANCE_METERS = 5;
+const WAYPOINT_ACTIVATION_DISTANCE_METERS = 10;
 const STARTING_POINT_SEARCH_DISTANCE = 50;
 
 @Injectable({
@@ -49,6 +37,11 @@ export class NavigationService {
   public visitedWaypoints$ = combineLatest([this.startingPoint$, this.waypointsInReach$])
     .pipe(
       scan((acc, [startingPoint, waypointsInReach]) => {
+        if (acc.last === null) {
+          acc.last = startingPoint.waypoint;
+          acc.visited = [acc.last];
+        }
+
         let lastRoutePoint = acc.last ?? startingPoint.waypoint;
         const routeEnumerable = getRouteEnumerable(lastRoutePoint, startingPoint.direction);
         routeEnumerable.next();
@@ -83,35 +76,29 @@ export class NavigationService {
 
       // Convert all visited waypoints to LatLng for the route
       const route: LatLng[] = visited.map(waypoint => waypoint.latlng);
+      const currentLatLng = this.positionToLatLng(position);
 
       // If we have a 'last' and 'target', calculate the closest point
       if (visited.length > 1 && last && target) {
-        const currentLatLng = this.positionToLatLng(position);
-
         const linePoints = [
           visited.at(-2)!.latlng,
           visited.at(-1)!.latlng,
           target.latlng
         ];
 
-        const closestPoint = this.getClosestPointOnLineSegment(linePoints, currentLatLng);
+        const {closestPoint, closestPointIndex} = this.getClosestPointOnLineSegment(linePoints, currentLatLng);
 
-        // Closest point on line segment from `last` to `target`
-        // const closestPoint = this.getClosestPointOnSegment(
-        //   last.latlng,
-        //   target.latlng,
-        //   currentLatLng
-        // );
-
-        const distanceToLastPoint = last.latlng.distanceTo(currentLatLng);
-
-        if (distanceToLastPoint > WAYPOINT_ACTIVATION_DISTANCE_METERS) {
-          return [...route, closestPoint];
+        if (closestPointIndex == 0) {
+          return [...route.slice(0, -1), closestPoint]
         }
 
-        // Add the interpolated point to the route
-        // route.push(closestPoint);
-        return [...route.slice(0, -1), closestPoint];
+        return [...route, closestPoint];
+      }
+
+      if (visited.length === 1 && last && target) {
+        const {closestPoint} = this.getClosestPointOnLineSegment([last!.latlng, target!.latlng], currentLatLng);
+
+        return [last!.latlng, closestPoint]
       }
 
       return route;
@@ -122,7 +109,7 @@ export class NavigationService {
 
 
   constructor() {
-    this.visitedWaypoints$.subscribe(console.log);
+    // this.visitedWaypoints$.subscribe(console.log);
   }
 
   public startNavigation(position$: Observable<Position | null>) {
@@ -143,7 +130,7 @@ export class NavigationService {
     const projection = this.dotProduct(startToPos, startToEnd) / startToEndLengthSquared;
 
     // Clamp projection to [0,1] to ensure point lies on the segment
-    const t = Math.max(0, Math.min(1, projection));
+    const t = Math.max(0, Math.min(1, projection)) + 0.05;
 
     // Interpolated point on the segment
     return latLng({
@@ -152,15 +139,13 @@ export class NavigationService {
     });
   }
 
-  private getClosestPointOnLineSegment(
-    points: LatLng[],
-    position: LatLng
-  ): LatLng {
+  private getClosestPointOnLineSegment(points: LatLng[], position: LatLng) {
     if (points.length < 2) {
       throw new Error('At least two points are required to form a line segment.');
     }
 
     let closestPoint: LatLng | null = null;
+    let closestPointIndex: number | null = null;
     let minDistance = Infinity;
 
     // Iterate over each segment formed by consecutive points
@@ -176,6 +161,7 @@ export class NavigationService {
       if (candidateDistance < minDistance) {
         closestPoint = candidatePoint;
         minDistance = candidateDistance;
+        closestPointIndex = i;
       }
     }
 
@@ -184,7 +170,7 @@ export class NavigationService {
       throw new Error('No closest point found on the line segments.');
     }
 
-    return closestPoint;
+    return {closestPoint, closestPointIndex};
   }
 
   // Helper functions for vector math

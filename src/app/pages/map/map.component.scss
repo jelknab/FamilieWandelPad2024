@@ -1,8 +1,50 @@
 :host {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 #map {
-    flex-grow: 1;    
+  flex-grow: 1;
+}
+
+#info-card {
+  position: fixed;
+
+  bottom: 1rem;
+  left: 1rem;
+
+  z-index: 1000;
+  background: #6594ec;
+}
+
+#distance-chip {
+  display: inline-block;
+
+  width: 5rem;
+  padding: .5rem;
+
+  color: white;
+  border-radius: 5px;
+
+  div:first-child {
+    font-size: 1.2em;
+    font-weight: bold;
+
+    text-align: center;
+    width: 100%;
+
+    border-bottom: 1px solid white;
+  }
+
+  div:last-child {
+    bottom: 1rem;
+    left: 3rem;
+
+    text-align: center;
+    width: 100%;
+  }
+
+  .unit {
+    font-size: .8em;
+  }
 }

@@ -1,5 +1,16 @@
 <div id="map"
-     leaflet 
+     leaflet
      (leafletMapReady)="onMapReady($event)"
      [leafletOptions]="options">
 </div>
+
+<ion-card id="info-card">
+  <ion-card-content>
+
+    <div id="distance-chip">
+      <div>{{distanceWalked$ | async | number}} <span class="unit">Km</span></div>
+      <div>{{totalDistance() | number}} <span class="unit">Km</span></div>
+    </div>
+
+  </ion-card-content>
+</ion-card>

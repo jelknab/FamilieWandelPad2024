@@ -1,3 +1,21 @@
-<p>
-  point-of-interest works!
-</p>
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="dark" (click)="closeModal()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="poi-modal-contents">
+    @if (imageSrc(); as imageSrc) {
+      <img [src]="imageSrc" onerror="this.style.display='none'">
+    }
+    <div class="text-contents ion-padding" [innerHTML]="content()"></div>
+  </div>
+</ion-content>
+
+

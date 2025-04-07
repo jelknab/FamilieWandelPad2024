@@ -49,7 +49,7 @@ export class GeoService {
         map(i => {
           const msPassed = i * intervalMs;
           const metersPassed = msPassed * (speedMps / 1000); // Distance passed in kilometers
-    
+
           let traveled = 0;
           for (let j = 0; j < relevantRoute.length - 1; j++) {
             const segmentDistance = relevantRoute[j].distanceTo(relevantRoute[j + 1]);
@@ -58,9 +58,12 @@ export class GeoService {
               const ratio = remainingDistance / segmentDistance;
               const interpolatedLat = relevantRoute[j].lat + ratio * (relevantRoute[j + 1].lat - relevantRoute[j].lat);
               const interpolatedLng = relevantRoute[j].lng + ratio * (relevantRoute[j + 1].lng - relevantRoute[j].lng);
+
+              const jittered = this.addJitter(interpolatedLat, interpolatedLng, 0)
+
               return {
                 timestamp: new Date().getMilliseconds(),
-                coords: { latitude: interpolatedLat, longitude: interpolatedLng, accuracy: 0 }
+                coords: { latitude: jittered.lat, longitude: jittered.lng, accuracy: 5 }
               } as Position;
             }
             traveled += segmentDistance;
@@ -72,5 +75,13 @@ export class GeoService {
         }),
         shareReplay({ refCount: false, bufferSize: 1 })
       )
+  }
+
+  private addJitter(lat: number, lng: number, maxJitterMeters: number) {
+    const earthRadius = 6371000; // Earth's radius in meters
+    const jitterLat = (Math.random() * 2 - 1) * (maxJitterMeters / earthRadius) * (180 / Math.PI);
+    const jitterLng = (Math.random() * 2 - 1) * (maxJitterMeters / earthRadius) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
+
+    return { lat: lat + jitterLat, lng: lng + jitterLng };
   }
 }

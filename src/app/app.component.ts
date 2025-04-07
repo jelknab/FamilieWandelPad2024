@@ -4,8 +4,7 @@ import { IonicModule } from '@ionic/angular';
     selector: 'app-root',
     templateUrl: 'app.component.html',
     styleUrls: ['app.component.scss'],
-    standalone: true,
-    imports: [IonicModule],
+    imports: [IonicModule]
 })
 export class AppComponent {
   constructor() {}

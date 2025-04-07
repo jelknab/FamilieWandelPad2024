@@ -1,23 +1,29 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import { LeafletModule } from '@bluehalo/ngx-leaflet';
 import {latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions, icon, marker, LatLng} from 'leaflet';
 import { LineString, Polygon, Position as GeoPosition } from 'geojson';
 import { GeoService } from 'src/app/services/geo.service';
-import { getSection, routePoints, sections } from "../../helpers/routeHelpers"
+import {getSection, routePoints, sections, Waypoint} from "../../helpers/routeHelpers"
 import { Position } from '@capacitor/geolocation';
-import { fromEvent, startWith, combineLatest } from 'rxjs';
-import { style } from '@angular/animations';
+import {fromEvent, startWith, combineLatest, distinctUntilChanged, map, filter, switchMap, shareReplay} from 'rxjs';
 import { NavigationService } from 'src/app/services/navigation.service';
 import 'leaflet-rotatedmarker';
+import {IonCard, IonCardContent, ModalController} from "@ionic/angular/standalone";
+import {PointOfInterestComponent} from "../point-of-interest/point-of-interest.component";
+import {AsyncPipe, DecimalPipe} from "@angular/common";
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 @Component({
-  selector: 'app-map',
-  templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss'],
+    selector: 'app-map',
+    templateUrl: './map.component.html',
+    styleUrls: ['./map.component.scss'],
   imports: [
-    LeafletModule
-  ],
-  standalone: true
+    LeafletModule,
+    IonCard,
+    IonCardContent,
+    AsyncPipe,
+    DecimalPipe
+  ]
 })
 export class MapComponent {
   options: MapOptions = {
@@ -41,18 +47,33 @@ export class MapComponent {
 
   geoService = inject(GeoService);
   navigationService = inject(NavigationService);
+  modalController = inject(ModalController);
+
+  distanceWalked$ = this.navigationService.walkedRoute$.pipe(
+    map((points: LatLng[]) => {
+      if (!points || points.length < 2) return 0;
+      const totalMeters = points.slice(1).reduce((total, point, i) => {
+        return total + point.distanceTo(points[i]);
+      }, 0);
+      const totalKilometers = totalMeters / 1000;
+      return parseFloat(totalKilometers.toFixed(2)); // Round to 2 decimal places
+    }),
+    shareReplay(1)
+  );
+
+  totalDistance = signal(this.computeTotalDistance(routePoints.map(rp => rp.latlng), 1))
 
   constructor() {
-    reactToLandmarkVisits()
+    this.reactToLandmarkVisits();
   }
 
   onMapReady(map: Map) {
-    const position$ = this.geoService.fakeGeolocationObservable(12, 500, latLng({lat: 52.216210, lng: 4.558076}));
+    const position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
 
     this.navigationService.startNavigation(position$);
 
     position$.subscribe(p => {
-      map.panTo(latLng({lat: p.coords.latitude, lng: p.coords.longitude}), { animate: true, duration: .5 });
+      map.panTo(latLng({lat: p.coords.latitude, lng: p.coords.longitude}), { animate: true, duration: 1 });
     });
 
     const navigationArrowIcon = icon({
@@ -64,25 +85,54 @@ export class MapComponent {
     const navigationArrowMarker = marker([0, 0], { icon: navigationArrowIcon })
       .addTo(map);
 
-    combineLatest([this.navigationService.position$, this.navigationService.visitedWaypoints$])
-      .subscribe(([position, visitedWaypoints]) => {
-        navigationArrowMarker.setLatLng({ lat: position.coords.latitude, lng: position.coords.longitude });
-
-        if (visitedWaypoints.target) {
-          const angle = this.calculateHeading(
-            latLng({lat: position.coords.latitude, lng: position.coords.longitude}),
-            latLng({lat: visitedWaypoints.target.latitude, lng: visitedWaypoints.target.longitude})
-            );
-
-          navigationArrowMarker.setRotationAngle(-angle + 90);
+    combineLatest([this.navigationService.position$, this.navigationService.visitedWaypoints$, this.navigationService.walkedRoute$])
+      .subscribe(([position, visitedWaypoints, walked]) => {
+        const lastWalkedPoint = walked.at(-1);
+        if  (lastWalkedPoint) {
+          navigationArrowMarker.setLatLng(lastWalkedPoint);
         }
+
+        if (walked.length >= 2) {
+          const angle = this.calculateHeading(
+            latLng(walked.at(-1)!),
+            latLng(walked.at(-2)!)
+          );
+
+          navigationArrowMarker.setRotationAngle(-angle - 90);
+        }
+        // navigationArrowMarker.setLatLng({ lat: position.coords.latitude, lng: position.coords.longitude });
+
+        // if (visitedWaypoints.target) {
+        //   const angle = this.calculateHeading(
+        //     latLng({lat: position.coords.latitude, lng: position.coords.longitude}),
+        //     latLng({lat: visitedWaypoints.target.latitude, lng: visitedWaypoints.target.longitude})
+        //     );
+        //
+        //   navigationArrowMarker.setRotationAngle(-angle + 90);
+        // }
       });
 
+    const landmarkIcon = icon({
+      iconUrl: 'assets/icon/Pin.svg',
+      iconSize: [36, 56],
+      iconAnchor: [18, 56]
+    });
+
+    for (const landmark of this.landmarksFromRoute()) {
+      const landmarkMarker = marker(landmark.latlng, {icon: landmarkIcon}).addTo(map);
+      fromEvent(landmarkMarker, 'click')
+        .subscribe(() => {
+          this.openPoiModal(landmark);
+        })
+    }
+
+    const pathLayerStroke = this.routeToLineString().addTo(map);
     const pathLayer = this.routeToLineString().addTo(map);
     const walkedRouteLayer = geoJSON<Position, LineString>({
       type: 'LineString',
       coordinates: []
     } as LineString).addTo(map);
+
 
     this.navigationService.walkedRoute$.subscribe(waypoints => {
       const coordinates = waypoints.map(wp => [wp.lng, wp.lat]);
@@ -91,6 +141,11 @@ export class MapComponent {
         type: 'LineString',
         coordinates: coordinates
       } as LineString);
+      walkedRouteLayer.setStyle({
+        color: "#e8e8e8",
+        weight: 10 * this.zoomLevelStrokeScale[map.getZoom()],
+        opacity: 1
+      });
     });
 
     fromEvent(map, 'zoomend')
@@ -99,10 +154,15 @@ export class MapComponent {
       )
       .subscribe(e => {
         pathLayer.setStyle({
-          color: "#4b4b96",
-          weight: 10 * this.zoomLevelStrokeScale[map.getZoom()],
+          color: "#2c72c7",
+          weight: 14 * this.zoomLevelStrokeScale[map.getZoom()],
           opacity: 1
-        })
+        });
+        pathLayerStroke.setStyle({
+          color: "#20589a",
+          weight: 16 * this.zoomLevelStrokeScale[map.getZoom()],
+          opacity: 1
+        });
       });
 
     setTimeout(() => {
@@ -111,7 +171,31 @@ export class MapComponent {
   }
 
   private reactToLandmarkVisits() {
-    this.navigationService.
+    this.navigationService.visitedWaypoints$
+      .pipe(
+        map(visitedWaypoints => {
+          return visitedWaypoints.last
+        }),
+        filter((waypoint): waypoint is Waypoint => waypoint !== null),
+        distinctUntilChanged((a, b) => a.id === b.id),
+        filter(waypoint => waypoint.type === 'PointOfInterest'),
+        switchMap(waypoint => {
+          return this.openPoiModal(waypoint)
+            .then(() => Haptics.impact({ style: ImpactStyle.Medium }));
+        })
+      )
+      .subscribe()
+  }
+
+  private async openPoiModal(waypoint: Waypoint) {
+    const modal = await this.modalController.create({
+      component: PointOfInterestComponent,
+      componentProps: {
+        waypointSet: waypoint
+      }
+    });
+
+    await modal.present()
   }
 
   private routeToLineString(): GeoJSON<Position, LineString> {
@@ -126,6 +210,20 @@ export class MapComponent {
       {
       }
     );
+  }
+
+  private computeTotalDistance(points: LatLng[], decimals = 2): number {
+    if (!points || points.length < 2) return 0;
+    const totalMeters = points.slice(1).reduce((total, point, i) => {
+      return total + point.distanceTo(points[i]);
+    }, 0);
+    const totalKilometers = totalMeters / 1000;
+    return parseFloat(totalKilometers.toFixed(decimals)); // Round to 2 decimal places
+  }
+
+  private landmarksFromRoute() {
+    return routePoints
+      .filter(routePoint => routePoint.type === "PointOfInterest")
   }
 
   private calculateHeading(current: LatLng, next: LatLng): number {

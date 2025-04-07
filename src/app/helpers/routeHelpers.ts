@@ -14,7 +14,14 @@ export const translations = rawTranslations
       language,
       content,
     } as Translation;
-  });
+  })
+  .reduce((acc, translation) => {
+    if (!acc[translation.routePointId]) {
+      acc[translation.routePointId] = {};
+    }
+    acc[translation.routePointId][translation.language] = translation;
+    return acc;
+  }, {} as Record<number, Record<string, Translation>>);
 
 export const routePoints = geoData
   .filter(rp => rp.routeId === 1)
@@ -23,7 +30,7 @@ export const routePoints = geoData
     return {
       ...point,
       latlng: latLng({lat: point.latitude, lng: point.longitude}),
-      translation: translations.find((t) => t.
+      translations: translations[point.id] as (Record<string, Translation> | undefined)
     }
   });
 
@@ -46,7 +53,7 @@ export const sections = geoData
   });
 
 export function* getRouteEnumerable(startingPoint: Waypoint, direction: Direction) {
-    var index = routePoints.indexOf(startingPoint);
+    let index = routePoints.indexOf(startingPoint);
 
     do {
         yield routePoints.at(index);
@@ -112,41 +119,43 @@ export function findOptimalStartingPoint(position: LatLng, searchRangeMeters: nu
         .sort((a, b) => a.latlng.distanceTo(position) - b.latlng.distanceTo(position));
 
     const closestWaypoint = waypointsByDistance[0];
-    const waypointsWithinRange = waypointsByDistance.filter(wp => wp.latlng.distanceTo(closestWaypoint.latlng) < searchRangeMeters);
-
-    const potentialWaypoints = [closestWaypoint, ...waypointsWithinRange];
-
-    const waypointSectionDistances = potentialWaypoints
-        .map(wp => {
-            return {
-                waypoint: wp,
-                distances: {
-                    forward: getDistanceInSection(wp, 'forward'),
-                    backward: getDistanceInSection(wp, 'backward')
-                }
-             }
-        });
-
-    const preferredStartingPoint = waypointSectionDistances
-        .sort((a, b) => Math.max(a.distances.forward.distance, a.distances.backward.distance) - Math.max(b.distances.forward.distance, b.distances.backward.distance))
-        .at(-1);
-
-    if (preferredStartingPoint === undefined) {
-        return {
-            waypoint: closestWaypoint,
-            direction: 'forward' as Direction
-        }
-    }
-
-    const waypoint = preferredStartingPoint.waypoint;
-    let direction = 'forward' as Direction;
-
-    if (preferredStartingPoint.distances.backward.distance > preferredStartingPoint.distances.forward.distance) {
-        direction = 'backward' as Direction;
-    }
-
     return {
-        waypoint,
-        direction: direction as Direction
-    };
+      waypoint: closestWaypoint,
+      direction: 'forward' as Direction
+    }
+
+    // const waypointsWithinRange = waypointsByDistance.filter(wp => wp.latlng.distanceTo(closestWaypoint.latlng) < searchRangeMeters);
+    //
+    // const potentialWaypoints = [closestWaypoint, ...waypointsWithinRange];
+    //
+    // const waypointSectionDistances = potentialWaypoints
+    //     .map(wp => {
+    //         return {
+    //             waypoint: wp,
+    //             distances: {
+    //                 forward: getDistanceInSection(wp, 'forward'),
+    //                 backward: getDistanceInSection(wp, 'backward')
+    //             }
+    //          }
+    //     });
+    //
+    // const preferredStartingPoint = waypointSectionDistances
+    //     .sort((a, b) => Math.max(a.distances.forward.distance, a.distances.backward.distance) - Math.max(b.distances.forward.distance, b.distances.backward.distance))
+    //     .at(-1);
+    //
+    // if (preferredStartingPoint === undefined) {
+    //
+    // }
+    //
+    // const waypoint = preferredStartingPoint.waypoint;
+    // let direction = 'forward' as Direction;
+    //
+    // if (preferredStartingPoint.distances.backward.distance > preferredStartingPoint.distances.forward.distance) {
+    //     direction = 'backward' as Direction;
+    // }
+    //
+    // return {
+    //     waypoint,
+    //     direction: direction as Direction
+    // };
 }
