@@ -5,13 +5,25 @@ import { LineString, Polygon, Position as GeoPosition } from 'geojson';
 import { GeoService } from 'src/app/services/geo.service';
 import {getSection, routePoints, sections, Waypoint} from "../../helpers/routeHelpers"
 import { Position } from '@capacitor/geolocation';
-import {fromEvent, startWith, combineLatest, distinctUntilChanged, map, filter, switchMap, shareReplay} from 'rxjs';
+import {
+  fromEvent,
+  startWith,
+  combineLatest,
+  distinctUntilChanged,
+  map,
+  map as rxjsMap,
+  filter,
+  switchMap,
+  shareReplay,
+  Observable, timer
+} from 'rxjs';
 import { NavigationService } from 'src/app/services/navigation.service';
 import 'leaflet-rotatedmarker';
 import {IonCard, IonCardContent, ModalController} from "@ionic/angular/standalone";
 import {PointOfInterestComponent} from "../point-of-interest/point-of-interest.component";
 import {AsyncPipe, DecimalPipe} from "@angular/common";
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import {environment} from "../../../environments/environment";
 
 @Component({
     selector: 'app-map',
@@ -28,7 +40,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 export class MapComponent {
   options: MapOptions = {
     layers: [
-      tileLayer('assets/map-tiles/{z}/{x}/{y}.png', { minNativeZoom: 16, maxNativeZoom: 18, minZoom: 15, maxZoom: 19 }),
+      tileLayer('assets/map-tiles/{z}/{x}/{y}.png', { minNativeZoom: 16, maxNativeZoom: 18, minZoom: 15, maxZoom: 19, attribution: '© OpenStreetMap' }),
     ],
     zoom: 18,
     minZoom: 16,
@@ -68,12 +80,27 @@ export class MapComponent {
   }
 
   onMapReady(map: Map) {
-    const position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
+    map.zoomControl.setPosition('bottomright')
+
+    let position$: Observable<Position>;
+    if (environment.production) {
+      position$ = this.geoService.position$;
+    } else {
+      position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
+    }
+    // const position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
 
     this.navigationService.startNavigation(position$);
 
-    position$.subscribe(p => {
-      map.panTo(latLng({lat: p.coords.latitude, lng: p.coords.longitude}), { animate: true, duration: 1 });
+    const paused$ = fromEvent(map, 'dragstart')
+      .pipe(
+        switchMap(() => timer(5000).pipe(rxjsMap(() => false), startWith(true))),
+        startWith(false)
+      );
+    combineLatest([position$, paused$]).subscribe(([position, paused]) => {
+      if (!paused) {
+        map.panTo(latLng({lat: position.coords.latitude, lng: position.coords.longitude}), { animate: true, duration: 1 });
+      }
     });
 
     const navigationArrowIcon = icon({
