@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { filter, Observable, shareReplay, take, interval, map, takeWhile } from 'rxjs';
+import {filter, Observable, shareReplay, take, interval, map, takeWhile, scan} from 'rxjs';
 import { Geolocation, Position } from '@capacitor/geolocation';
 import { latLng, LatLng } from 'leaflet';
 import {getRouteEnumerable, findOptimalStartingPoint, routePoints, Waypoint} from '../helpers/routeHelpers';
@@ -18,7 +18,11 @@ export class GeoService {
     return new Observable(subscriber => {
       let callbackId: string | null = null;
 
-      Geolocation.watchPosition({}, (cb) => subscriber.next(cb)).then(cbId => callbackId = cbId);
+      Geolocation.watchPosition({
+        maximumAge: 2500,
+        enableHighAccuracy: true,
+        minimumUpdateInterval: 1000
+      }, (cb) => subscriber.next(cb)).then(cbId => callbackId = cbId);
 
       return function unsubscribe() {
         if (callbackId !== null) {
@@ -27,7 +31,50 @@ export class GeoService {
           console.error("Missing Id during geolocation unsubscribe.");
         }
       }
-    })
+    });
+  }
+
+  public real2Fake(): Observable<Position> {
+    const relevantRoute = Array.from(getRouteEnumerable(routePoints[0], "forward"))
+      .filter((routePoint): routePoint is Waypoint => routePoint !== undefined)
+      .map(routePoint => latLng({lng: routePoint.longitude, lat: routePoint.latitude}));
+
+    const speedMps = (5 * 1000) / 3600;
+
+    return this.getGeolocationObservable()
+      .pipe(
+        filter((position): position is Position => position !== null),
+        scan((acc, position) => {
+          const msPassed = new Date().getMilliseconds() - acc.timestamp
+          const metersPassed = msPassed * (speedMps / 1000); // Distance passed in kilometers
+
+          let traveled = 0;
+          for (let j = 0; j < relevantRoute.length - 1; j++) {
+            const segmentDistance = relevantRoute[j].distanceTo(relevantRoute[j + 1]);
+            if (traveled + segmentDistance >= metersPassed) {
+              const remainingDistance = metersPassed - traveled;
+              const ratio = remainingDistance / segmentDistance;
+              const interpolatedLat = relevantRoute[j].lat + ratio * (relevantRoute[j + 1].lat - relevantRoute[j].lat);
+              const interpolatedLng = relevantRoute[j].lng + ratio * (relevantRoute[j + 1].lng - relevantRoute[j].lng);
+
+              const jittered = this.addJitter(interpolatedLat, interpolatedLng, 0);
+
+              position.coords.latitude = jittered.lat;
+              position.coords.longitude = jittered.lng;
+
+              return {
+                timestamp: new Date().getMilliseconds(),
+                position: position
+              };
+            }
+            traveled += segmentDistance;
+          }
+
+          return acc;
+        }, {timestamp: new Date().getMilliseconds(), position: null as Position | null }),
+        map(acc => acc.position),
+        filter((position): position is Position => position !== null)
+      )
   }
 
   public fakeGeolocationObservable(speedKmh: number, intervalMs: number, startingCoordinates: LatLng): Observable<Position> {

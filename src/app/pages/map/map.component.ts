@@ -1,6 +1,6 @@
 import {Component, inject, signal} from '@angular/core';
 import { LeafletModule } from '@bluehalo/ngx-leaflet';
-import {latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions, icon, marker, LatLng} from 'leaflet';
+import {latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions, icon, marker, LatLng, DivIcon, LeafletMouseEvent} from 'leaflet';
 import { LineString, Polygon, Position as GeoPosition } from 'geojson';
 import { GeoService } from 'src/app/services/geo.service';
 import {getSection, routePoints, sections, Waypoint} from "../../helpers/routeHelpers"
@@ -15,7 +15,7 @@ import {
   filter,
   switchMap,
   shareReplay,
-  Observable, timer
+  Observable, timer, tap
 } from 'rxjs';
 import { NavigationService } from 'src/app/services/navigation.service';
 import 'leaflet-rotatedmarker';
@@ -87,8 +87,16 @@ export class MapComponent {
       position$ = this.geoService.position$;
     } else {
       position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
+
+      for (let routePoint of routePoints) {
+        marker([routePoint.latlng.lat, routePoint.latlng.lng], {
+          icon: new DivIcon({
+            html: `<p style="white-space: nowrap">${routePoint.id}</p><p style="white-space: nowrap">${routePoint.orderIndex}</p>`
+          })
+        })
+          .addTo(map)
+      }
     }
-    // const position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
 
     this.navigationService.startNavigation(position$);
 
@@ -127,16 +135,6 @@ export class MapComponent {
 
           navigationArrowMarker.setRotationAngle(-angle - 90);
         }
-        // navigationArrowMarker.setLatLng({ lat: position.coords.latitude, lng: position.coords.longitude });
-
-        // if (visitedWaypoints.target) {
-        //   const angle = this.calculateHeading(
-        //     latLng({lat: position.coords.latitude, lng: position.coords.longitude}),
-        //     latLng({lat: visitedWaypoints.target.latitude, lng: visitedWaypoints.target.longitude})
-        //     );
-        //
-        //   navigationArrowMarker.setRotationAngle(-angle + 90);
-        // }
       });
 
     const landmarkIcon = icon({
@@ -174,6 +172,11 @@ export class MapComponent {
         opacity: 1
       });
     });
+
+    fromEvent<LeafletMouseEvent>(map, 'click')
+      .subscribe((click) => {
+        console.log(click);
+      })
 
     fromEvent(map, 'zoomend')
       .pipe(
@@ -226,13 +229,17 @@ export class MapComponent {
   }
 
   private routeToLineString(): GeoJSON<Position, LineString> {
+    const path = routePoints
+      .sort((a, b) => b.orderIndex - a.orderIndex)
+      .filter(rp => rp.routeId === 1)
+      .map(routePoint => [routePoint.longitude, routePoint.latitude]);
+
+
+
     return geoJSON<Position, LineString>(
       {
         type: 'LineString',
-        coordinates: routePoints
-          .sort((a, b) => b.orderIndex - a.orderIndex)
-          .filter(rp => rp.routeId === 1)
-          .map(routePoint => [routePoint.longitude, routePoint.latitude])
+        coordinates: [...path, path[0]]
       } as LineString,
       {
       }

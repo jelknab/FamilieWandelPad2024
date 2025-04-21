@@ -1,6 +1,19 @@
 import {Injectable} from '@angular/core';
 import {Position} from '@capacitor/geolocation';
-import {combineLatest, distinctUntilChanged, filter, map, Observable, scan, share, shareReplay, Subject, switchMap, take} from 'rxjs';
+import {
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  map,
+  Observable,
+  scan,
+  share,
+  shareReplay,
+  Subject,
+  switchMap,
+  take,
+  tap
+} from 'rxjs';
 import {findOptimalStartingPoint, getRouteEnumerable, routePoints, Waypoint} from '../helpers/routeHelpers';
 import {latLng, LatLng} from 'leaflet';
 
@@ -16,9 +29,12 @@ export class NavigationService {
 
   public position$ = this.positionObservable$
     .pipe(
+      tap((positionObservable) => console.log('observable offered', positionObservable)),
       switchMap((position$) => position$),
+      tap((position) => console.log('position received', position)),
       filter((position): position is Position => position !== null),
-      filter((position) => position.coords.accuracy < WAYPOINT_ACTIVATION_DISTANCE_METERS),
+      // filter((position) => position.coords.accuracy < WAYPOINT_ACTIVATION_DISTANCE_METERS),
+      tap((position) => console.log('position passed filters', position)),
       shareReplay(1)
     );
 
@@ -26,6 +42,7 @@ export class NavigationService {
     .pipe(
       map(position => this.positionToLatLng(position)),
       map(position => findOptimalStartingPoint(position, STARTING_POINT_SEARCH_DISTANCE)),
+      tap((a) => console.log('starting point', a)),
       take(1)
     );
 

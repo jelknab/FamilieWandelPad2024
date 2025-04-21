@@ -1,6 +1,7 @@
 import { latLng, LatLng } from 'leaflet';
 import { geoData } from 'src/assets/geodata';
 import { translations as rawTranslations } from 'src/assets/poi-translations';
+import {updatedRoute} from "../routeMigrations/Migrations";
 
 export type Waypoint = typeof routePoints[number];
 export type Direction = 'forward' | 'backward';
@@ -23,7 +24,7 @@ export const translations = rawTranslations
     return acc;
   }, {} as Record<number, Record<string, Translation>>);
 
-export const routePoints = geoData
+const initialRoutePoints = geoData
   .filter(rp => rp.routeId === 1)
   .sort((a, b) => b.orderIndex - a.orderIndex)
   .map(point => {
@@ -33,6 +34,8 @@ export const routePoints = geoData
       translations: translations[point.id] as (Record<string, Translation> | undefined)
     }
   });
+
+export const routePoints: typeof initialRoutePoints = updatedRoute(initialRoutePoints);
 
 export const sections = geoData
   .map(dataPoint => dataPoint.sectionId)
