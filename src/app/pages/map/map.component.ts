@@ -1,10 +1,24 @@
 import {Component, inject, signal} from '@angular/core';
-import { LeafletModule } from '@bluehalo/ngx-leaflet';
-import {latLng, latLngBounds, tileLayer, Map, geoJSON, GeoJSON, MapOptions, icon, marker, LatLng, DivIcon, LeafletMouseEvent} from 'leaflet';
-import { LineString, Polygon, Position as GeoPosition } from 'geojson';
-import { GeoService } from 'src/app/services/geo.service';
+import {LeafletModule} from '@bluehalo/ngx-leaflet';
+import {
+  latLng,
+  latLngBounds,
+  tileLayer,
+  Map,
+  geoJSON,
+  GeoJSON,
+  MapOptions,
+  icon,
+  marker,
+  LatLng,
+  DivIcon,
+  LeafletMouseEvent,
+  circle
+} from 'leaflet';
+import {LineString, Polygon, Position as GeoPosition} from 'geojson';
+import {GeoService} from 'src/app/services/geo.service';
 import {getSection, routePoints, sections, Waypoint} from "../../helpers/routeHelpers"
-import { Position } from '@capacitor/geolocation';
+import {Position} from '@capacitor/geolocation';
 import {
   fromEvent,
   startWith,
@@ -17,18 +31,18 @@ import {
   shareReplay,
   Observable, timer, tap
 } from 'rxjs';
-import { NavigationService } from 'src/app/services/navigation.service';
+import {NavigationService} from 'src/app/services/navigation.service';
 import 'leaflet-rotatedmarker';
 import {IonCard, IonCardContent, ModalController} from "@ionic/angular/standalone";
 import {PointOfInterestComponent} from "../point-of-interest/point-of-interest.component";
 import {AsyncPipe, DecimalPipe} from "@angular/common";
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import {Haptics, ImpactStyle} from '@capacitor/haptics';
 import {environment} from "../../../environments/environment";
 
 @Component({
-    selector: 'app-map',
-    templateUrl: './map.component.html',
-    styleUrls: ['./map.component.scss'],
+  selector: 'app-map',
+  templateUrl: './map.component.html',
+  styleUrls: ['./map.component.scss'],
   imports: [
     LeafletModule,
     IonCard,
@@ -40,16 +54,21 @@ import {environment} from "../../../environments/environment";
 export class MapComponent {
   options: MapOptions = {
     layers: [
-      tileLayer('assets/map-tiles/{z}/{x}/{y}.png', { minNativeZoom: 16, maxNativeZoom: 18, minZoom: 15, maxZoom: 19, attribution: '© OpenStreetMap' }),
+      tileLayer('assets/map-tiles/{z}/{x}/{y}.png', {
+        minNativeZoom: 16,
+        maxNativeZoom: 18,
+        minZoom: 15,
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }),
     ],
     zoom: 18,
     minZoom: 16,
     maxZoom: 19,
-    center: latLng({ lat: 52.215754, lng: 4.558665 }),
-    maxBounds: latLngBounds({ lat: 52.207471, lng: 4.548644 }, { lat: 52.224326, lng: 4.572674 })
+    center: latLng({lat: 52.215754, lng: 4.558665})
   };
 
-  zoomLevelStrokeScale: {[key: number]: number} = {
+  zoomLevelStrokeScale: { [key: number]: number } = {
     15: .5,
     16: .5,
     17: .5,
@@ -77,6 +96,27 @@ export class MapComponent {
 
   constructor() {
     this.reactToLandmarkVisits();
+
+    if (environment.production) {
+      this.options.layers?.push(
+        tileLayer('assets/map-tiles/{z}/{x}/{y}.png', {
+          minNativeZoom: 16,
+          maxNativeZoom: 18,
+          minZoom: 15,
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        })
+      );
+
+      this.options.maxBounds = latLngBounds({lat: 52.207471, lng: 4.548644}, {lat: 52.224326, lng: 4.572674})
+    } else {
+      this.options.layers?.push(
+        tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        })
+      );
+    }
   }
 
   onMapReady(map: Map) {
@@ -86,7 +126,8 @@ export class MapComponent {
     if (environment.production) {
       position$ = this.geoService.position$;
     } else {
-      position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
+      position$ = this.geoService.position$;
+      // position$ = this.geoService.fakeGeolocationObservable(6, 500, latLng({lat: 52.216210, lng: 4.558076}));
 
       for (let routePoint of routePoints) {
         marker([routePoint.latlng.lat, routePoint.latlng.lng], {
@@ -107,8 +148,32 @@ export class MapComponent {
       );
     combineLatest([position$, paused$]).subscribe(([position, paused]) => {
       if (!paused) {
-        map.panTo(latLng({lat: position.coords.latitude, lng: position.coords.longitude}), { animate: true, duration: 1 });
+        map.panTo(latLng({lat: position.coords.latitude, lng: position.coords.longitude}), {
+          animate: true,
+          duration: 1
+        });
       }
+    });
+
+    const locationAccuracyCircle = circle([51.508, -0.11], {
+      color: '#5182ff',
+      fillColor: '#789dfb',
+      fillOpacity: 0.5,
+      radius: 5
+    }).addTo(map);
+
+    const userPositionDot = circle([51.508, -0.11], {
+      fillColor: '#5182ff',
+      fillOpacity: 0.5,
+      radius: 2,
+      stroke: false
+    }).addTo(map);
+
+    position$.subscribe(position => {
+      locationAccuracyCircle.setRadius(position.coords.accuracy);
+      locationAccuracyCircle.setLatLng([position.coords.latitude, position.coords.longitude]);
+
+      userPositionDot.setLatLng([position.coords.latitude, position.coords.longitude]);
     });
 
     const navigationArrowIcon = icon({
@@ -117,13 +182,13 @@ export class MapComponent {
       iconAnchor: [25, 25]
     });
 
-    const navigationArrowMarker = marker([0, 0], { icon: navigationArrowIcon })
+    const navigationArrowMarker = marker([0, 0], {icon: navigationArrowIcon})
       .addTo(map);
 
     combineLatest([this.navigationService.position$, this.navigationService.visitedWaypoints$, this.navigationService.walkedRoute$])
       .subscribe(([position, visitedWaypoints, walked]) => {
         const lastWalkedPoint = walked.at(-1);
-        if  (lastWalkedPoint) {
+        if (lastWalkedPoint) {
           navigationArrowMarker.setLatLng(lastWalkedPoint);
         }
 
@@ -211,7 +276,7 @@ export class MapComponent {
         filter(waypoint => waypoint.type === 'PointOfInterest'),
         switchMap(waypoint => {
           return this.openPoiModal(waypoint)
-            .then(() => Haptics.impact({ style: ImpactStyle.Medium }));
+            .then(() => Haptics.impact({style: ImpactStyle.Medium}));
         })
       )
       .subscribe()
@@ -235,14 +300,12 @@ export class MapComponent {
       .map(routePoint => [routePoint.longitude, routePoint.latitude]);
 
 
-
     return geoJSON<Position, LineString>(
       {
         type: 'LineString',
         coordinates: [...path, path[0]]
       } as LineString,
-      {
-      }
+      {}
     );
   }
 

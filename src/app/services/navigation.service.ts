@@ -33,7 +33,7 @@ export class NavigationService {
       switchMap((position$) => position$),
       tap((position) => console.log('position received', position)),
       filter((position): position is Position => position !== null),
-      // filter((position) => position.coords.accuracy < WAYPOINT_ACTIVATION_DISTANCE_METERS),
+      filter((position) => position.coords.accuracy < 25),
       tap((position) => console.log('position passed filters', position)),
       shareReplay(1)
     );

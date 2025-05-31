@@ -1,6 +1,6 @@
 {
-  "start.title": "Welcome Hiker!",
-  "start.body": "Thank you for downloading the Kaag hiking navigation app! The short route you are about to walk, will take you along some of the most interesting places on the island. A couple of highlights along the route will trigger an information prompt on your device, keep an eye out!",
-  "start.have_fun": "Have fun!",
-  "start.get_started": "Get started"
+	"start.body": "Thank you for downloading the Kaag hiking navigation app! The short route you are about to walk, will take you along some of the most interesting places on the island. A couple of highlights along the route will trigger an information prompt on your device, keep an eye out!",
+	"start.get_started": "Get started",
+	"start.have_fun": "Have fun!",
+	"start.title": "Welcome Hiker!"
 }

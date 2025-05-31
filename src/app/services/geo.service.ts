@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {filter, Observable, shareReplay, take, interval, map, takeWhile, scan} from 'rxjs';
+import {filter, Observable, shareReplay, interval, map, scan} from 'rxjs';
 import { Geolocation, Position } from '@capacitor/geolocation';
 import { latLng, LatLng } from 'leaflet';
 import {getRouteEnumerable, findOptimalStartingPoint, routePoints, Waypoint} from '../helpers/routeHelpers';
@@ -19,6 +19,7 @@ export class GeoService {
       let callbackId: string | null = null;
 
       Geolocation.watchPosition({
+        timeout: 2500,
         maximumAge: 2500,
         enableHighAccuracy: true,
         minimumUpdateInterval: 1000

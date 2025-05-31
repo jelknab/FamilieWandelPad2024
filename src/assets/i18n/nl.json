@@ -1,6 +1,6 @@
 {
-  "start.title": "Missing value for 'start.title'",
-  "start.body": "Missing value for 'start.body'",
-  "start.have_fun": "Missing value for 'start.have_fun'",
-  "start.get_started": "Missing value for 'start.get_started'"
+	"start.body": "Bedankt voor het downloaden van de Kaag wandel navigatie-app! De korte route die je gaat wandelen, brengt je langs enkele van de meest interessante plekken op het eiland. Een paar hoogtepunten langs de route zullen een informatieprompt op je apparaat activeren, houd het in de gaten!",
+	"start.get_started": "Aan de slag",
+	"start.have_fun": "Veel plezier!",
+	"start.title": "Welkom Wandelaar!"
 }
