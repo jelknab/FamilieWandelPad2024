@@ -1,6 +1,8 @@
 {
-	"start.body": "Dziękujemy za pobranie aplikacji nawigacyjnej do wędrówek Kaag! Krótka trasa, którą zamierzasz przejść, poprowadzi Cię wzdłuż niektórych z najciekawszych miejsc na wyspie. Kilka punktów na trasie wywoła komunikat informacyjny na Twoim urządzeniu, miej to na uwadze!",
-	"start.get_started": "Rozpocznij",
-	"start.have_fun": "Baw się dobrze!",
-	"start.title": "Witaj Wędrowcze!"
+  "start.title": "Witaj Wędrowcze!",
+  "start.body": "Dziękujemy za pobranie aplikacji nawigacyjnej do wędrówek Kaag! Krótka trasa, którą zamierzasz przejść, poprowadzi Cię wzdłuż niektórych z najciekawszych miejsc na wyspie. Kilka punktów na trasie wywoła komunikat informacyjny na Twoim urządzeniu, miej to na uwadze!",
+  "start.have_fun": "Baw się dobrze!",
+  "start.get_started": "Rozpocznij",
+  "app.settings.geolocation.title": "Brak dostępu do lokalizacji",
+  "app.settings.geolocation.description": "Jako aplikacja nawigacyjna wymaga dostępu do Twojej lokalizacji. Aplikacja nie łączy się z internetem i nigdy nie udostępnia Twoich danych. Naciśnięcie 'Dalej' otworzy ustawienia urządzenia aplikacji, gdzie możesz zezwolić na dostęp do lokalizacji."
 }

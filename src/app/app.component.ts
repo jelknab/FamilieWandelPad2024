@@ -3,6 +3,8 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
 import {TranslocoService} from "@jsverse/transloco";
 import { Device } from '@capacitor/device';
+import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
+import { Dialog } from '@capacitor/dialog';
 
 @Component({
   selector: 'app-root',
@@ -26,13 +28,35 @@ export class AppComponent {
         return null;
       })
       .then(permissionStatus => {
+        console.log(permissionStatus);
         if (permissionStatus?.location === 'denied') {
-          // TODO
+          return this.toNativeOptions();
         }
+        return null;
+      })
+      .catch(() => {
+        return this.toNativeOptions();
       });
 
     Device.getLanguageCode().then(l => {
       this.transloco.setActiveLang(l.value);
     });
+  }
+
+  private async toNativeOptions() {
+    console.log('to native options');
+    const { value } = await Dialog.confirm({
+      title: this.transloco.translate('app.settings.geolocation.title'),
+      message: this.transloco.translate('app.settings.geolocation.description'),
+    });
+
+    if (!value) {
+      return;
+    }
+
+    return NativeSettings.open({
+      optionAndroid: AndroidSettings.ApplicationDetails,
+      optionIOS: IOSSettings.App
+    })
   }
 }

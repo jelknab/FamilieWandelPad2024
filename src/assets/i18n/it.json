@@ -1,6 +1,8 @@
 {
-	"start.body": "Grazie per aver scaricato l'app di navigazione per escursioni Kaag! Il breve percorso che stai per percorrere ti porterà lungo alcuni dei luoghi più interessanti dell'isola. Alcuni punti salienti lungo il percorso attiveranno un messaggio informativo sul tuo dispositivo, fai attenzione!",
-	"start.get_started": "Inizia",
-	"start.have_fun": "Divertiti!",
-	"start.title": "Benvenuto Escursionista!"
+  "start.title": "Benvenuto Escursionista!",
+  "start.body": "Grazie per aver scaricato l'app di navigazione per escursioni Kaag! Il breve percorso che stai per percorrere ti porterà lungo alcuni dei luoghi più interessanti dell'isola. Alcuni punti salienti lungo il percorso attiveranno un messaggio informativo sul tuo dispositivo, fai attenzione!",
+  "start.have_fun": "Divertiti!",
+  "start.get_started": "Inizia",
+  "app.settings.geolocation.title": "Accesso alla posizione mancante",
+  "app.settings.geolocation.description": "Come app di navigazione, richiede l'accesso alla tua posizione. L'app non si connette a Internet e non condividerà mai le tue informazioni. Premendo 'Avanti' si apriranno le impostazioni del dispositivo dell'app, dove potrai concedere il permesso per la posizione."
 }

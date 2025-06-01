@@ -1,6 +1,8 @@
 {
-	"start.body": "Merci d'avoir téléchargé l'application de navigation de randonnée Kaag ! Le court itinéraire que vous allez emprunter vous fera découvrir certains des endroits les plus intéressants de l'île. Quelques points forts le long du parcours déclencheront une invite d'information sur votre appareil, restez attentif !",
-	"start.get_started": "Commencer",
-	"start.have_fun": "Amusez-vous bien !",
-	"start.title": "Bienvenue randonneur !"
+  "start.title": "Bienvenue randonneur !",
+  "start.body": "Merci d'avoir téléchargé l'application de navigation de randonnée Kaag ! Le court itinéraire que vous allez emprunter vous fera découvrir certains des endroits les plus intéressants de l'île. Quelques points forts le long du parcours déclencheront une invite d'information sur votre appareil, restez attentif !",
+  "start.have_fun": "Amusez-vous bien !",
+  "start.get_started": "Commencer",
+  "app.settings.geolocation.title": "Accès à la localisation manquant",
+  "app.settings.geolocation.description": "En tant qu'application de navigation, elle nécessite l'accès à votre position. L'application ne se connecte pas à Internet et ne partage jamais vos informations. En appuyant sur 'Suivant', vous ouvrirez les paramètres de l'application sur l'appareil pour autoriser l'accès à la localisation."
 }

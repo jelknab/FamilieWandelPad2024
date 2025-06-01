@@ -1,6 +1,8 @@
 {
-	"start.body": "Bedankt voor het downloaden van de Kaag wandel navigatie-app! De korte route die je gaat wandelen, brengt je langs enkele van de meest interessante plekken op het eiland. Een paar hoogtepunten langs de route zullen een informatieprompt op je apparaat activeren, houd het in de gaten!",
-	"start.get_started": "Aan de slag",
-	"start.have_fun": "Veel plezier!",
-	"start.title": "Welkom Wandelaar!"
+  "start.title": "Welkom Wandelaar!",
+  "start.body": "Bedankt voor het downloaden van de Kaag wandel navigatie-app! De korte route die je gaat wandelen, brengt je langs enkele van de meest interessante plekken op het eiland. Een paar hoogtepunten langs de route zullen een informatieprompt op je apparaat activeren, houd het in de gaten!",
+  "start.have_fun": "Veel plezier!",
+  "start.get_started": "Aan de slag",
+  "app.settings.geolocation.title": "Locatietoegang ontbreekt",
+  "app.settings.geolocation.description": "Als navigatie-app heeft het toegang tot je locatie nodig. De app maakt geen verbinding met internet en deelt je gegevens op geen enkel moment. Door op 'Volgende' te drukken, open je de apparaatinstellingen van de app waar je locatietoegang kunt toestaan."
 }

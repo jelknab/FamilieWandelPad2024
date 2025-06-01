@@ -1,6 +1,8 @@
 {
-	"start.body": "¡Gracias por descargar la aplicación de navegación para senderismo Kaag! La ruta corta que estás a punto de recorrer te llevará por algunos de los lugares más interesantes de la isla. Un par de puntos destacados a lo largo de la ruta activarán un aviso de información en tu dispositivo, ¡mantén los ojos abiertos!",
-	"start.get_started": "Comenzar",
-	"start.have_fun": "¡Diviértete!",
-	"start.title": "¡Bienvenido Senderista!"
+  "start.title": "¡Bienvenido Senderista!",
+  "start.body": "¡Gracias por descargar la aplicación de navegación para senderismo Kaag! La ruta corta que estás a punto de recorrer te llevará por algunos de los lugares más interesantes de la isla. Un par de puntos destacados a lo largo de la ruta activarán un aviso de información en tu dispositivo, ¡mantén los ojos abiertos!",
+  "start.have_fun": "¡Diviértete!",
+  "start.get_started": "Comenzar",
+  "app.settings.geolocation.title": "Falta acceso a la ubicación",
+  "app.settings.geolocation.description": "Como aplicación de navegación, necesita acceso a tu ubicación. La aplicación no se conecta a internet y no compartirá tu información en ningún momento. Al presionar 'Siguiente', se abrirán los ajustes del dispositivo de la aplicación donde puedes permitir el permiso de ubicación."
 }

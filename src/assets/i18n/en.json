@@ -1,6 +1,8 @@
 {
-	"start.body": "Thank you for downloading the Kaag hiking navigation app! The short route you are about to walk, will take you along some of the most interesting places on the island. A couple of highlights along the route will trigger an information prompt on your device, keep an eye out!",
-	"start.get_started": "Get started",
-	"start.have_fun": "Have fun!",
-	"start.title": "Welcome Hiker!"
+  "start.title": "Welcome Hiker!",
+  "start.body": "Thank you for downloading the Kaag hiking navigation app! The short route you are about to walk, will take you along some of the most interesting places on the island. A couple of highlights along the route will trigger an information prompt on your device, keep an eye out!",
+  "start.have_fun": "Have fun!",
+  "start.get_started": "Get started",
+  "app.settings.geolocation.title": "Missing location access",
+  "app.settings.geolocation.description": "As a navigation app, it requires access to your location. The app does not connect to the internet and will not share your information at any time. Pressing next will open the app's device settings where you can allow the location permission."
 }

@@ -1,6 +1,8 @@
 {
-	"start.body": "Vielen Dank für den Download der Kaag-Wander-Navigations-App! Die kurze Route, die Sie gleich gehen werden, führt Sie zu einigen der interessantesten Orte auf der Insel. Einige Highlights entlang der Route werden eine Informationsaufforderung auf Ihrem Gerät auslösen, achten Sie darauf!",
-	"start.get_started": "Loslegen",
-	"start.have_fun": "Viel Spaß!",
-	"start.title": "Willkommen Wanderer!"
+  "start.title": "Willkommen Wanderer!",
+  "start.body": "Vielen Dank für den Download der Kaag-Wander-Navigations-App! Die kurze Route, die Sie gleich gehen werden, führt Sie zu einigen der interessantesten Orte auf der Insel. Einige Highlights entlang der Route werden eine Informationsaufforderung auf Ihrem Gerät auslösen, achten Sie darauf!",
+  "start.have_fun": "Viel Spaß!",
+  "start.get_started": "Loslegen",
+  "app.settings.geolocation.title": "Fehlender Standortzugriff",
+  "app.settings.geolocation.description": "Als Navigations-App benötigt sie Zugriff auf Ihren Standort. Die App stellt keine Verbindung zum Internet her und gibt Ihre Informationen zu keinem Zeitpunkt weiter. Durch Tippen auf 'Weiter' öffnen Sie die Geräteeinstellungen der App, in denen Sie die Standortfreigabe erlauben können."
 }
