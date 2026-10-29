@@ -1,16 +1,16 @@
-import {enableProdMode, importProvidersFrom, isDevMode} from '@angular/core';
+import {enableProdMode, importProvidersFrom, isDevMode, provideZoneChangeDetection} from '@angular/core';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 
 
 import {environment} from './environments/environment';
 import {AppComponent} from './app/app.component';
 import {BrowserModule, bootstrapApplication} from '@angular/platform-browser';
-import {IonicRouteStrategy, IonicModule} from '@ionic/angular';
+import {IonicRouteStrategy} from '@ionic/angular';
 import {provideRouter, RouteReuseStrategy, Routes} from '@angular/router';
-import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClient, withXhr} from '@angular/common/http';
 import {TranslocoHttpLoader} from './transloco-loader';
 import {provideTransloco} from '@jsverse/transloco';
-import {provideIonicAngular} from '@ionic/angular/standalone';
+import {provideIonicAngular} from '@ionic/angular';
 import {StartComponent} from "./app/pages/start/start.component";
 import {MapComponent} from "./app/pages/map/map.component";
 
@@ -40,10 +40,10 @@ const routes: Routes = [
 bootstrapApplication(AppComponent, {
   providers: [
     //importProvidersFrom(BrowserModule),
-    provideIonicAngular(),
+    provideZoneChangeDetection(),provideIonicAngular(),
     provideRouter(routes),
     {provide: RouteReuseStrategy, useClass: IonicRouteStrategy},
-    provideHttpClient(),
+    provideHttpClient(withXhr()),
     provideTransloco({
       config: {
         availableLangs: ['en', 'nl', 'fr', 'es', 'de'],

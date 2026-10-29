@@ -1,5 +1,5 @@
-import {Component, inject} from '@angular/core';
-import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import {Component, inject, ChangeDetectionStrategy} from '@angular/core';
+import { IonApp, IonRouterOutlet } from '@ionic/angular';
 import { Geolocation } from '@capacitor/geolocation';
 import {TranslocoService} from "@jsverse/transloco";
 import { Device } from '@capacitor/device';
@@ -10,6 +10,7 @@ import { Dialog } from '@capacitor/dialog';
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     IonApp,
     IonRouterOutlet

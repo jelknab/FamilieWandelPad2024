@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, input, OnInit, signal} from '@angular/core';
+import {Component, computed, effect, inject, input, OnInit, signal, ChangeDetectionStrategy} from '@angular/core';
 import {Waypoint} from "../../helpers/routeHelpers";
 import {TranslocoService} from "@jsverse/transloco";
 import {map, switchMap} from "rxjs";
@@ -11,7 +11,7 @@ import {
   IonHeader,
   IonIcon,
   IonToolbar, ModalController
-} from "@ionic/angular/standalone";
+} from "@ionic/angular";
 import {addIcons} from "ionicons";
 import * as ionIcons from 'ionicons/icons';
 
@@ -22,6 +22,7 @@ import * as ionIcons from 'ionicons/icons';
   imports: [
     IonButtons, IonContent, IonHeader, IonToolbar, IonButton, IonIcon
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true
 })
 export class PointOfInterestComponent {

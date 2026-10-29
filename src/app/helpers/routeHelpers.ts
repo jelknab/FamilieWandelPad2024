@@ -1,6 +1,6 @@
 import { latLng, LatLng } from 'leaflet';
-import { geoData } from 'src/assets/geodata';
-import { translations as rawTranslations } from 'src/assets/poi-translations';
+import { geoData } from '../../assets/geodata';
+import { translations as rawTranslations } from '../../assets/poi-translations';
 import {updatedRoute} from "../routeMigrations/Migrations";
 
 export type Waypoint = typeof routePoints[number];

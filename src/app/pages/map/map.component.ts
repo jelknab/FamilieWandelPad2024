@@ -1,4 +1,4 @@
-import {Component, inject, signal} from '@angular/core';
+import {Component, inject, signal, ChangeDetectionStrategy} from '@angular/core';
 import {LeafletModule} from '@bluehalo/ngx-leaflet';
 import {
   latLng,
@@ -16,7 +16,7 @@ import {
   circle
 } from 'leaflet';
 import {LineString, Polygon, Position as GeoPosition} from 'geojson';
-import {GeoService} from 'src/app/services/geo.service';
+import {GeoService} from '../../../app/services/geo.service';
 import {getSection, routePoints, sections, Waypoint} from "../../helpers/routeHelpers"
 import {Position} from '@capacitor/geolocation';
 import {
@@ -31,9 +31,9 @@ import {
   shareReplay,
   Observable, timer, tap
 } from 'rxjs';
-import {NavigationService} from 'src/app/services/navigation.service';
+import {NavigationService} from '../../../app/services/navigation.service';
 import 'leaflet-rotatedmarker';
-import {IonCard, IonCardContent, ModalController} from "@ionic/angular/standalone";
+import {IonCard, IonCardContent, ModalController} from "@ionic/angular";
 import {PointOfInterestComponent} from "../point-of-interest/point-of-interest.component";
 import {AsyncPipe, DecimalPipe} from "@angular/common";
 import {Haptics, ImpactStyle} from '@capacitor/haptics';
@@ -43,6 +43,7 @@ import {environment} from "../../../environments/environment";
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     LeafletModule,
     IonCard,
